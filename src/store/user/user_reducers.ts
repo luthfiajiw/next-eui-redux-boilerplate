@@ -4,8 +4,9 @@ import { User, UserActionTypes, UserState } from "./user_types";
 let detail: User;
 
 export const initialState: UserState = {
-    busy: true,
     detail,
+    pageIndex: 0,
+    pageSize: 0,
     results: [],
 }
 
@@ -14,8 +15,9 @@ export const user: Reducer<UserState> = (state = initialState, action) => {
         case UserActionTypes.GET_USERS:
             return {
                 ...state,
-                busy: action.payload.busy,
-                results: action.payload.results
+                results: action.results,
+                pageIndex: action.pageIndex,
+                pageSize: action.pageSize
             }
         default:
             return state;

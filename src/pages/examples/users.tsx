@@ -4,11 +4,15 @@ import { getUsers } from "../../store/user/user_actions";
 import {
     EuiBasicTable,
     EuiIcon,
-    EuiToolTip
+    EuiToolTip,
+    Pagination
 } from "@elastic/eui";
 
-import { User } from "../../store/user/user_types";
+import { User, UserState } from "../../store/user/user_types";
 import { Primitive } from "@elastic/eui/src/services/sort/comparators";
+import { LoadingState } from "../../store/loading/loading_types";
+
+type Align = 'left' | 'right' | 'center';
 
 interface Column {
     className?: string,
@@ -22,7 +26,7 @@ interface Column {
     sortable?: boolean | Primitive
     isExpander?: boolean,
     textOnly?: boolean,
-    align?: 'left' | 'right' | 'center',
+    align?: Align,
     truncateText?: boolean,
     isMobileHeader?: boolean,
     mobileOptions?: any,
@@ -31,15 +35,23 @@ interface Column {
     footer?: any
 }
 
+interface Page {
+    index: number,
+    size: number
+};
+
 const UserView: FunctionComponent = () => {
     const dispatch = useDispatch();
-    const { results } = useSelector(state => state.user);
+    const { results } = useSelector((state) : UserState => state.user);
+    const { busy } = useSelector((state): LoadingState => state.loading);
+    const [pageIndex, setPageIndex] = useState(0);
+    const [pageSize, setPageSize] = useState(5);
     const [sortField, setSortField] = useState('name');
     const [sortDirection, setSortDirection] = useState('asc');
     
     useEffect(() => {
-        dispatch(getUsers());
-    }, [])
+        dispatch(getUsers(pageSize, pageIndex));
+    }, [pageIndex])
 
 
     const columns: Array<any> = [
@@ -84,6 +96,7 @@ const UserView: FunctionComponent = () => {
             
         }
     } 
+    
     const getCellProps: Function = (item: User, column: Column) => {
         const { id } = item;
         const { field } = column;
@@ -94,15 +107,34 @@ const UserView: FunctionComponent = () => {
             textOnly: true,
             onClick: () => console.log(column)
         };
-    } 
+    }
+
+    const onChangePagination = (page) => {
+        const { index, size } = page.page;
+
+        setPageIndex(index);
+        setPageSize(size);
+    }
+
+    const paginations: Pagination = {
+        pageIndex,
+        pageSize,
+        totalItemCount: results.length,
+        pageSizeOptions: [5, 10],
+        hidePerPageOptions: false,
+    }
 
     return(
         <div>
             <EuiBasicTable
+                id='users-table'
+                pagination={paginations}
+                loading={busy}
                 items={results}
                 columns={columns}
                 rowProps={getRowProps}
                 cellProps={getCellProps}
+                onChange={onChangePagination}
             />
         </div>
     );

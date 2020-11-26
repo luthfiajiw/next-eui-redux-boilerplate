@@ -3,8 +3,9 @@ export enum UserActionTypes {
 }
 
 export interface UserState {
-    busy: boolean,
     detail: User,
+    pageIndex: number,
+    pageSize: number,
     results: Array<User>,
 }
 
