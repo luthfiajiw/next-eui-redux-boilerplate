@@ -3,7 +3,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { getUsers } from "../../store/user/user_actions";
 import {
     EuiBasicTable,
+    EuiBasicTableColumn,
     EuiIcon,
+    EuiTableSortingType,
     EuiToolTip,
     Pagination
 } from "@elastic/eui";
@@ -35,11 +37,6 @@ interface Column {
     footer?: any
 }
 
-interface Page {
-    index: number,
-    size: number
-};
-
 const UserView: FunctionComponent = () => {
     const dispatch = useDispatch();
     const { results } = useSelector((state) : UserState => state.user);
@@ -51,10 +48,10 @@ const UserView: FunctionComponent = () => {
     
     useEffect(() => {
         dispatch(getUsers(pageSize, pageIndex));
-    }, [pageIndex])
+    }, [pageIndex, pageSize, sortField, sortDirection])
 
 
-    const columns: Array<any> = [
+    const columns: EuiBasicTableColumn<any>[] = [
         {
             field: 'name',
             name: 'Name',
@@ -90,6 +87,7 @@ const UserView: FunctionComponent = () => {
     const getRowProps: Function = (item: User) => {
         const { id } = item;
         return {
+            id: {id},
             'data-test-subj': `row-${id}`,
             className: 'customRowClass',
             onClick: () => console.log(item)
@@ -102,6 +100,7 @@ const UserView: FunctionComponent = () => {
         const { field } = column;
 
         return {
+            id: {id},
             className: 'customCellClass',
             'data-test-subj': `cell-${id}-${field}`,
             textOnly: true,
@@ -109,11 +108,14 @@ const UserView: FunctionComponent = () => {
         };
     }
 
-    const onChangePagination = (page) => {
-        const { index, size } = page.page;
+    const onChangePagination = ({ page, sort }) => {
+        const { index, size } = page;
+        const { field, direction } = sort;
 
         setPageIndex(index);
         setPageSize(size);
+        setSortField(field);
+        setSortDirection(direction);
     }
 
     const paginations: Pagination = {
@@ -124,19 +126,25 @@ const UserView: FunctionComponent = () => {
         hidePerPageOptions: false,
     }
 
+    const sorting: EuiTableSortingType<any> = {
+        sort: {
+            field: sortField,
+            direction: sortDirection
+        }
+    }
+
     return(
-        <div>
-            <EuiBasicTable
-                id='users-table'
-                pagination={paginations}
-                loading={busy}
-                items={results}
-                columns={columns}
-                rowProps={getRowProps}
-                cellProps={getCellProps}
-                onChange={onChangePagination}
-            />
-        </div>
+        <EuiBasicTable
+            id='users-table'
+            pagination={paginations}
+            sorting={sorting}
+            loading={busy}
+            items={results}
+            columns={columns}
+            rowProps={getRowProps}
+            cellProps={getCellProps}
+            onChange={onChangePagination}
+        />
     );
 }
 
