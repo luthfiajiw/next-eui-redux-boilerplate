@@ -1,10 +1,11 @@
-import { FunctionComponent, ReactNode, useEffect, useState } from "react";
+import { FunctionComponent, ReactNode, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getUsers } from "../../store/user/user_actions";
 import {
     EuiBasicTable,
     EuiBasicTableColumn,
     EuiIcon,
+    EuiTableSelectionType,
     EuiTableSortingType,
     EuiToolTip,
     Pagination
@@ -45,6 +46,8 @@ const UserView: FunctionComponent = () => {
     const [pageSize, setPageSize] = useState(5);
     const [sortField, setSortField] = useState('name');
     const [sortDirection, setSortDirection] = useState('asc');
+    const [selectedItems, setSelectedItems] = useState([]);
+    const tableRef = useRef();
     
     useEffect(() => {
         dispatch(getUsers(pageSize, pageIndex));
@@ -90,7 +93,7 @@ const UserView: FunctionComponent = () => {
             id: {id},
             'data-test-subj': `row-${id}`,
             className: 'customRowClass',
-            onClick: () => console.log(item)
+            onClick: () => {}
             
         }
     } 
@@ -104,7 +107,7 @@ const UserView: FunctionComponent = () => {
             className: 'customCellClass',
             'data-test-subj': `cell-${id}-${field}`,
             textOnly: true,
-            onClick: () => console.log(column)
+            onClick: () => {}
         };
     }
 
@@ -116,6 +119,10 @@ const UserView: FunctionComponent = () => {
         setPageSize(size);
         setSortField(field);
         setSortDirection(direction);
+    }
+
+    const onSelectionChange = (selectedItems) => {
+        setSelectedItems(selectedItems);
     }
 
     const paginations: Pagination = {
@@ -133,11 +140,20 @@ const UserView: FunctionComponent = () => {
         }
     }
 
+    const selection: EuiTableSelectionType<any> = {
+        onSelectionChange,
+        selectable: () => true
+    }
+
     return(
         <EuiBasicTable
+            ref={tableRef}
             id='users-table'
+            itemId="id"
             pagination={paginations}
             sorting={sorting}
+            selection={selection}
+            isSelectable={true}
             loading={busy}
             items={results}
             columns={columns}
